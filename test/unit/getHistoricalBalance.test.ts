@@ -1,8 +1,8 @@
-import { getHistoricalBalance } from "../../src/services/getHistoricalBalances";
+import { getHistoricalBalance } from '../../src/services/getAPIData';
 
-describe("getHistoricalBalance", () => {
-  it("should return the boilerplate object", () => {
+describe('getHistoricalBalance', () => {
+  it('should return the boilerplate object', () => {
     const res = getHistoricalBalance();
-    expect(res).toEqual({ hello: "world" });
+    expect(res).toEqual({ hello: 'world' });
   });
 });

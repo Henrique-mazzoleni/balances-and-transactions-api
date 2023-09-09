@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "start": "tsx src/server.ts --watch",
+    "dev": "tsx watch src/server.ts",
     "test": "vitest --run"
   },
   "keywords": [],
