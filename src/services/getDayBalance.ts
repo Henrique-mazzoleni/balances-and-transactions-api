@@ -20,10 +20,6 @@ export default function getDayBalance(
   let currBalance = balance.amount;
   let currDate = new Date(balance.date);
 
-  // setting the target date to the end of the day;
-  // date.setDate(date.getDate() + 1);
-  // date.setTime(date.getTime() - 1);
-
   // sums the daily amount until the required date has been reached
   while (currDate > date) {
     // clones the current date before transforming to the previous day
@@ -54,4 +50,21 @@ export default function getDayBalance(
     currency: balance.currency,
     date: date.toISOString(),
   };
+}
+
+export function validDate(year: number, month: number, day: number): boolean {
+  const isLeap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+
+  const now = new Date();
+
+  // check if date is in the future
+  if (now < new Date(year, month, day)) return false;
+
+  // invalid month
+  if (month > 11) return false;
+
+  // invalid day
+  if ([0, 2, 4, 6, 7, 9, 11].includes(month)) return day <= 31;
+  if ([3, 5, 8, 10].includes(month)) return day <= 30;
+  return isLeap ? day <= 29 : day <= 28;
 }
