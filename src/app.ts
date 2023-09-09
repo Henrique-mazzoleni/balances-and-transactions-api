@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from '../swagger.json';
-import { getHistoricalBalance, accessAPIData } from './services/getAPIData';
+import { accessAPIData } from './services/getAPIData';
 
 import type { Request } from 'express';
 import getDayBalance, {
@@ -42,13 +42,11 @@ app.get(
       .map(Number);
     const [toDay, toMonth, toYear]: number[] = to.split('-').map(Number);
 
-    const startDate = new Date(Date.UTC(fromYear, fromMonth - 1, fromDay));
+    const startDate = new Date(Date.UTC(toYear, toMonth - 1, toDay));
     startDate.setDate(startDate.getDate() + 1);
     startDate.setTime(startDate.getTime() - 1);
 
-    const endDate = new Date(Date.UTC(toYear, toMonth - 1, toDay));
-    endDate.setDate(endDate.getDate() + 1);
-    endDate.setTime(endDate.getTime() - 1);
+    const endDate = new Date(Date.UTC(fromYear, fromMonth - 1, fromDay));
 
     // date validation
     if (
@@ -69,6 +67,17 @@ app.get(
       });
     }
 
+    console.log('parsed starting date:', startDate);
+    console.log('parsed ending date:', endDate);
+
+    // checking if startDate is before endDate
+    if (startDate < endDate) {
+      return res.status(400).json({
+        errorCode: 'BAD_REQUEST',
+        description: 'From date must be after the to date.',
+      });
+    }
+
     // validate sorting input
     if (!['asc', 'desc'].includes(sort)) {
       return res.status(400).json({
@@ -80,69 +89,86 @@ app.get(
 
     try {
       if (apiKey) {
+        // getting current balance from provided api
         const currentBalance: BalanceData = await accessAPIData(
           '/balances',
           apiKey
         );
 
+        // validate retrieved balance data
+        if (
+          !currentBalance.amount ||
+          !currentBalance.currency ||
+          !currentBalance.date ||
+          isNaN(Number(currentBalance.amount)) ||
+          new Date(currentBalance.date).toString() === 'Invalid Date'
+        ) {
+          return res.status(500).json({
+            errorCode: 'INTERNAL_SERVER_ERROR',
+            description: 'From date must be after the to date.',
+          });
+        }
+
+        console.log('Retrieved Balance:', currentBalance);
+
+        // getting transactions from provided api
         const { transactions }: { transactions: TransactionData[] } =
           await accessAPIData('/transactions', apiKey);
 
+        // filtering invalid transactions, processed ones and ones peformed after the to date
         const filteredTransactions = transactions.filter(
-          (transaction) => transaction.status === 'PROCESSED'
+          (transaction) =>
+            !isNaN(Number(transaction.amount)) &&
+            new Date(transaction.date).toString() !== 'Invalid Date' &&
+            new Date(transaction.date) > endDate &&
+            transaction.status === 'PROCESSED'
         );
 
+        // sorting transactions by date
         filteredTransactions.sort(
           (a, b) => Date.parse(b.date) - Date.parse(a.date)
         );
 
         const balancesArray: BalanceData[] = [];
 
+        // getting starting balance from the given date range
         const startDayBalance = getDayBalance(
           currentBalance,
           filteredTransactions,
           startDate
         );
-        const balanceDate = new Date(startDayBalance.date);
-
-        balancesArray.push({
-          date: `${String(balanceDate.getUTCDate()).padStart(2, '0')}/${String(
-            balanceDate.getUTCMonth() + 1
-          ).padStart(2, '0')}/${balanceDate.getFullYear()}`,
-          amount: startDayBalance.amount,
-          currency: startDayBalance.currency,
-        });
 
         const balanceDay = new Date(startDayBalance.date);
         let dailyBalance = startDayBalance;
 
+        // calculates the daily balance and adds to response array
         while (balanceDay > endDate) {
-          balanceDay.setDate(balanceDay.getDate() - 1);
           dailyBalance = getDayBalance(
             dailyBalance,
             filteredTransactions,
             new Date(balanceDay)
           );
-          const balanceDate = new Date(dailyBalance.date);
+
           balancesArray.push({
-            date: `${String(balanceDate.getUTCDate()).padStart(
-              2,
-              '0'
-            )}/${String(balanceDate.getUTCMonth() + 1).padStart(
-              2,
-              '0'
-            )}/${balanceDate.getFullYear()}`,
+            date: `${String(balanceDay.getUTCDate()).padStart(2, '0')}/${String(
+              balanceDay.getUTCMonth() + 1
+            ).padStart(2, '0')}/${balanceDay.getFullYear()}`,
             amount: dailyBalance.amount,
             currency: dailyBalance.currency,
           });
+
+          balanceDay.setDate(balanceDay.getDate() - 1);
         }
 
+        // sorts in ascending date order in case this option is selected
         if (sort === 'asc')
           balancesArray.sort(
             (a, b) =>
               Number(a.date.split('/').reverse().join('')) -
               Number(b.date.split('/').reverse().join(''))
           );
+
+        console.log(filteredTransactions);
 
         return res.status(200).json(balancesArray);
       } else {

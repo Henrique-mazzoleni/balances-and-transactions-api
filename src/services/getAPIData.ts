@@ -17,7 +17,3 @@ export async function accessAPIData(endpoint: string, apiKey: string) {
     console.log(error);
   }
 }
-
-export function getHistoricalBalance() {
-  return { hello: 'world' };
-}
