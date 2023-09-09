@@ -21,8 +21,8 @@ export default function getDayBalance(
   let currDate = new Date(balance.date);
 
   // setting the target date to the end of the day;
-  date.setDate(date.getDate() + 1);
-  date.setTime(date.getTime() - 1);
+  // date.setDate(date.getDate() + 1);
+  // date.setTime(date.getTime() - 1);
 
   // sums the daily amount until the required date has been reached
   while (currDate > date) {
