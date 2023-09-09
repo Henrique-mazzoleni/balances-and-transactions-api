@@ -4,8 +4,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from '../swagger.json';
 import {
   getHistoricalBalance,
-  getBalance,
-  getTransactions,
+  accessAPIData,
 } from './services/getHistoricalBalances';
 
 type BalanceData = {
@@ -28,8 +27,14 @@ app.get('/historical-balances', async (req, res) => {
   try {
     const apiKey = req.get('x-api-key');
     if (apiKey) {
-      const currentBalance: BalanceData = await getBalance(apiKey);
-      const transactions: TransactionData[] = await getTransactions(apiKey);
+      const currentBalance: BalanceData = await accessAPIData(
+        '/balances',
+        apiKey
+      );
+      const transactions: TransactionData[] = await accessAPIData(
+        '/transactions',
+        apiKey
+      );
       console.log(currentBalance);
       console.log(transactions);
     } else {
