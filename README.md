@@ -34,143 +34,89 @@ If you have any questions about it, don't hesitate to send us an email.
 
 From the two provided endpoints, `GET /balances` and `GET /transactions`, the 
 data was extracted and processed in the new `GET /historical-balances`. The 
-new endpoint uses authentication based on an API Key. 
-Both endpoints use authentication based on an API Key. Therefore, we are also 
-providing you with an API Key that should be sent using an HTTP header called 
-`x-api-key`. The API Key value is 
-`b4a4552e-1eac-44ac-8fcc-91acca085b98-f94b74ce-aa17-48f5-83e2-8b8c30509c18`.
+new endpoint uses authentication based on an API Key. A valid API Key should be 
+sent using an HTTP header called `x-api-key`.
 
-### `GET /balances` 
+### `GET /historical-balances` 
 
-This will give you a response in the following shape:  
+This Endpoint will give a list of all the daily balances between 2 desired dates.
+The endpoint has 3 required query paramaters:
+
+##### `from` from date
+
+Strating date of the to be displayed balances. It must be in `DD-MM-YYYY` format.
+
+##### `to` to date
+
+End date of the to be displayed balances. It must also be in `DD-MM-YYYY` format.
+The end date must be at a later time than the from date. If the from and end date 
+are the same only one balance will be displayed.
+
+##### `sort` sorting order
+
+Sorting order of the balances based on the dates. For this paramater there are two 
+accepted values. `asc` for ascending values and `desc` for descending values. All 
+other values will result in a `400` status response.
+
+### Example of a Valid input
+
+`GET /historical-balances?from=25-06-2022&to=27-06-2022&sort=desc`. 
+
+This should give the balances on the given days in the following format:
 
 ```json
-{ 
-	"amount": 10000, 
-	"currency": "EUR", 
-	"date": "2022-06-30T23:59:59.577Z" 
-}
-```
-
-### `GET /transactions`
-
-This is going to return an array of transactions such as: 
-
-```json
-{ 
-	"transactions": [ 
-		{ 
-			"amount": -765, 
-			"currency": "EUR", 
-			"date": "2022-02-07T09:57:27.235Z", 
-			"status": "BOOKED" 
-		}, 
-		{ 
-			"amount": -911, 
-			"currency": "EUR", 
-			"date": "2022-01-03T22:00:09.002Z", 
-			"status": "PROCESSED" 
-		}, 
-        ...
-	] 
-} 
+[
+  {
+    "date": "27/06/2022",
+    "amount": 10287,
+    "currency": "EUR"
+  },
+  {
+    "date": "26/06/2022",
+    "amount": 10026,
+    "currency": "EUR"
+  },
+  {
+    "date": "25/06/2022",
+    "amount": 11630,
+    "currency": "EUR"
+  }
+]
 ```
 
 Bear in mind that all amounts are in cents, so `1 Euro` is represented as `100`.
 
-## Mandatory requirements: 
+## How to use and test this endpoint
 
-- You should provide a REST endpoint where we can fetch the balances for a 
-specific date, such as: 
-`GET /historical-balances?from=03-01-2022&to=03-04-2022&sort=desc`. 
-
-This should give the balance on this day in the following format:
-
-```json
-[ 
-    { 
-        "date": "04/01/2022", 
-        "amount": 9109, 
-        "currency": "EUR" 
-    }, 
-    { 
-        "date": "03/01/2022", 
-        "amount": 9109, 
-        "currency": "EUR" 
-    }
-] 
-```
-
-- Your solution must include proper error handling and input validaton to
-ensure data integrity.
-
-- Implement logging for key events and errors.
-
-- Unit tests are mandatory - manual test is nice but unit tests automate the 
-process and allow us to make changes more confidently, 
-we won't accept solutions without unit tests. 
-
-- The code must be available on a public repository on your personal [GitHub](https://github.com) account.
-    - Note: the original project already includes a `.git` folder where the remote is currently targetting
-    to `Bitbucket`. In order to be able to `push` your changes to your `Github` account, you need to
-    update the git remote to your Github account instead. If you don't have much familiarity with 
-    [git](https://git-scm.com/), read [this thread](https://stackoverflow.com/questions/2432764/how-do-i-change-the-uri-url-for-a-remote-git-repository),
-    the process of changing remote URLs is well explained there.
-
-- Add a README to your project so we can run it ourselves and test it. 
-
-- Add documentation for the new endpoint, the project already includes a 
-[Swagger](https://swagger.io/specification/) file documenting the current state 
-of the API.
-
-## Optional requirements 
-
-- Add a linter to the project, e.g. [ESLint](https://eslint.org/).
-
-- Add integration tests.
-
-## How to start developing using this boilerplate project?
-
-### Build the project
+### Building the project
 
 ```sh
-npm run build
-```
-
-### Running the server 
-
-```sh
-# After cloning the repository, install the dependencies
 npm install
 
-# Start the server
-npm start
+npm run build
 
-
-> balances-and-transactions-api@1.0.0 start
-> tsx src/server.ts --watch
+node build/src/server.js
 
 🚀 Server started on port 3333!
-
-# If you see the message above, everything worked!
-# The `start` command has hot-reload on, i.e., anytime you modify a file
-# the server restarts. Bear it in mind if your solution keeps state in memory.
+📚 API docs are available on: http://localhost:3333/api-docs
 ```
 
+You can now test the `/historical-balances` endpoint on `localhost:3333`
+
+Once the server is running you can also access the Documentation through the 
+`/api-docs` endpoint.
+
+
 ### Running the tests
+
+The test suite uses the `API_URL` and `API_KEY` provided in the `.env` file with 
+this repository. If necessary they may need to be added manualy to the environment 
+variables.
+
+Once the variables are set you can run the tests with:
 
 ```sh
 npm test
 ```
-
-## Notes 
-
-- This repository is a boilerplate using Typescript, the main programming 
-language at Banxware, but feel free to use whatever works for you best.
-
-- We've added an extra endpoint where you can visualize the API Documentation.
-In order to do this: 
-    - start the app: `npm start`
-    - open the following link: [http://localhost:3333/api-docs](http://localhost:3333/api-docs)
 
 - This application was developed and validated using [node LTS (v18.17.1)](https://nodejs.org/en/download).
