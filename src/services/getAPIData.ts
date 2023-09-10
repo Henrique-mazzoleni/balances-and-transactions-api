@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 // this function extracts the data from the api given for this exercise
 export async function accessAPIData(endpoint: string, apiKey: string) {
@@ -11,9 +11,23 @@ export async function accessAPIData(endpoint: string, apiKey: string) {
       });
       return data;
     } else {
-      throw new Error('API URL missing.');
+      return {
+        errorCode: 'BAD_REQUEST',
+        description: 'Missing API URL.',
+      };
     }
   } catch (error) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      return {
+        errorCode: 'UNAUTHORIZED',
+        description: 'Invalid API key.',
+      };
+    }
     console.log(error);
+    return {
+      errorCode: 'INTENRAL_SERVER_ERROR',
+      description:
+        'Something went wrong with the API call. Check the server logs.',
+    };
   }
 }

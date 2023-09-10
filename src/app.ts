@@ -105,7 +105,7 @@ app.get(
         ) {
           return res.status(500).json({
             errorCode: 'INTERNAL_SERVER_ERROR',
-            description: 'From date must be after the to date.',
+            description: 'Retrieved corrupted data from API.',
           });
         }
 
