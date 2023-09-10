@@ -17,6 +17,11 @@ type QueryParams = {
   sort: 'asc' | 'desc';
 };
 
+type ReturnError = {
+  errorCode: string;
+  description: string;
+};
+
 const app = express();
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
@@ -90,10 +95,17 @@ app.get(
     try {
       if (apiKey) {
         // getting current balance from provided api
-        const currentBalance: BalanceData = await accessAPIData(
+        const currentBalance: BalanceData | ReturnError = await accessAPIData(
           '/balances',
           apiKey
         );
+
+        if ('errorCode' in currentBalance) {
+          if (currentBalance.errorCode === 'UNAUTHORIZED') {
+            return res.status(401).json(currentBalance);
+          }
+          return res.status(500).json(currentBalance);
+        }
 
         // validate retrieved balance data
         if (
@@ -168,17 +180,24 @@ app.get(
               Number(b.date.split('/').reverse().join(''))
           );
 
-        console.log(filteredTransactions);
+        console.log(
+          'Transactions used to calculate the balances:',
+          filteredTransactions
+        );
 
         return res.status(200).json(balancesArray);
       } else {
         return res.status(401).json({
-          errorCode: 'INVALID_API_KEY',
-          description: 'Invalid API key provided.',
+          errorCode: 'UNAUTHORIZED',
+          description: 'Missing API key.',
         });
       }
     } catch (error) {
       console.log(error);
+      return res.status(500).json({
+        errorCode: 'INTERNAL_SERVER_ERROR',
+        description: 'Something went wrong. Please check the server logs.',
+      });
     }
   }
 );

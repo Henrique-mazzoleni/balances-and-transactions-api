@@ -32,7 +32,9 @@ If you have any questions about it, don't hesitate to send us an email.
 
 ## API
 
-We are providing you two endpoints: `GET /balances` and `GET /transactions`.
+From the two provided endpoints, `GET /balances` and `GET /transactions`, the 
+data was extracted and processed in the new `GET /historical-balances`. The 
+new endpoint uses authentication based on an API Key. 
 Both endpoints use authentication based on an API Key. Therefore, we are also 
 providing you with an API Key that should be sent using an HTTP header called 
 `x-api-key`. The API Key value is 

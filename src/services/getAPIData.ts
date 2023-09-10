@@ -13,7 +13,7 @@ export async function accessAPIData(endpoint: string, apiKey: string) {
     } else {
       return {
         errorCode: 'BAD_REQUEST',
-        description: 'Missing API URL.',
+        description: 'Missing API URL. API URL missing from env vars.',
       };
     }
   } catch (error) {

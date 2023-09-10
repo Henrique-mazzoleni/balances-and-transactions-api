@@ -17,36 +17,19 @@ export default function getDayBalance(
   transactions: TransactionData[],
   date: Date
 ): BalanceData {
-  let currBalance = balance.amount;
-  let currDate = new Date(balance.date);
-
-  // sums the daily amount until the required date has been reached
-  while (currDate > date) {
-    // clones the current date before transforming to the previous day
-    const prevDay = new Date(
-      currDate.getFullYear(),
-      currDate.getMonth(),
-      currDate.getDate()
+  const newAmount = transactions
+    .filter(
+      (transaction) =>
+        new Date(transaction.date) < new Date(balance.date) &&
+        new Date(transaction.date) > date
+    )
+    .reduce(
+      (acc, currTransaction) => acc - currTransaction.amount,
+      balance.amount
     );
-    prevDay.setDate(prevDay.getDate() - 1);
-
-    // reduces the daily transactions and adds to the current balance
-    currBalance = transactions
-      .filter(
-        (transaction) =>
-          new Date(transaction.date) < currDate &&
-          new Date(transaction.date) > prevDay
-      )
-      .reduce(
-        (acc, currTransaction) => acc - currTransaction.amount,
-        currBalance
-      );
-
-    currDate = prevDay;
-  }
 
   return {
-    amount: currBalance,
+    amount: newAmount,
     currency: balance.currency,
     date: date.toISOString(),
   };
