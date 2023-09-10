@@ -1,100 +1,88 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Balances and Transactions API",
-    "description": "This API provides endpoints to get the current balance and a list of transactions.",
+    "title": "Historic Balances API",
+    "description": "This API provides an endpoint to get the balance of the desired dates.",
     "version": "1.0.0",
     "servers": {
       "url": "https://uh4goxppjc7stkg24d6fdma4t40wxtly.lambda-url.eu-central-1.on.aws"
     }
   },
   "paths": {
-    "/balances": {
+    "/historical-balances": {
       "get": {
         "security": [
           {
             "xApiKey": []
           }
         ],
-        "description": "Get the current balance.",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "amount": {
-                      "type": "number"
-                    },
-                    "currency": {
-                      "type": "string",
-                      "enum": [
-                        "EUR"
-                      ]
-                    },
-                    "date": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  }
-                }
-              }
+        "description": "Get the daily balances of all dates in the given date range",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "description": "Start date of the daily balances",
+            "required": "true",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "description": "End date of the daily balances",
+            "required": "true",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "description": "Sorting method for the result array",
+            "required": "true",
+            "schema": {
+              "type": "string",
+              "default": "desc",
+              "enum": ["asc", "desc"]
             }
           }
-        }
-      }
-    },
-    "/transactions": {
-      "get": {
-        "security": [
-          {
-            "xApiKey": []
-          }
         ],
-        "description": "Get a list of transactions.",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "transactions": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "amount": {
-                            "type": "number"
-                          },
-                          "currency": {
-                            "type": "string",
-                            "enum": [
-                              "EUR"
-                            ]
-                          },
-                          "date": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "status": {
-                            "type": "string",
-                            "enum": [
-                              "BOOKED",
-                              "PROCESSED",
-                              "CANCELLED"
-                            ]
-                          }
-                        }
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "amount": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": ["EUR"]
                       }
                     }
                   }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Input. Check the parameters' format."
+          },
+          "401": {
+            "description": "Invalid API key."
+          },
+          "500": {
+            "description": "Something went wrong. Please check the console."
           }
         }
       }
